@@ -29,14 +29,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function createDBList(dataArray) {
     dataArray.sort();
-    dataArray.forEach((dataString, index) => {
-      originListFilm.append(constructorNewListElement(dataString, index));
+    dataArray.forEach((dataString) => {
+      originListFilm.append(constructorNewListElement(dataString));
     })
   };
 
   function addNewListElement(dataString) {
     for (let i = originListFilm.children.length; i > 0; i--) {                                // ПЕРЕБИРАЕМ ДЕТЕЙ ЧТОБЫ ОПРЕДЕЛИТЬ ОЧЕРЕДНОСТЬ ДОБАВЛЕНИЯ
-      if (originListFilm.children[i-1].innerText.toUpperCase() < dataString.toUpperCase()) {
+      if (originListFilm.children[i-1].innerText < dataString) {
         originListFilm.children[i-1].after(constructorNewListElement(dataString));            // ДОБАВЛЯЕМ ЭЛЕМЕНТ ПО АЛФАВИТУ
         break;
       } else if (i == 1) {
@@ -47,13 +47,13 @@ document.addEventListener('DOMContentLoaded', () => {
     if (favoriteCheckbox.checked) console.log('Favorite!!')
   };
 
-  function constructorNewListElement(dataString, index) {
+  function constructorNewListElement(dataString) {
     let newElement = blankListElement.cloneNode(true);
-    newElement.setAttribute('data-index', index);
+    newElement.setAttribute('data-fullname', dataString);
       if (dataString.length > 21) {                         // ЕСЛИ НАЗВАНИЕ БОЛЕЕ 21 СИМВОЛА УКОРАЧИВАЕМ ВЫВОД          
         dataString = dataString.slice(0,21) + '...';
       }
-      newElement.prepend(dataString.toUpperCase());
+      newElement.prepend(dataString);
     return newElement
   };
 
@@ -68,26 +68,31 @@ document.addEventListener('DOMContentLoaded', () => {
   addButton.addEventListener('click', addFilm);
   function addFilm (e) {
       e.preventDefault()
-      if (inputField.value) {
-        movieDB.movies.push(inputField.value);
+      let dataString = inputField.value.toUpperCase();
+      if (inputField.value && inputField.value.length < 50) {
+        movieDB.movies.push(dataString);
         movieDB.movies.sort();
-        addNewListElement(inputField.value);
+        addNewListElement(dataString);
         addButton.form.reset();
+      } else {
+        console.log('Ничего не введено или название слишком длинное');
       }
   };
 
   originListFilm.addEventListener('click', deleteElement);
   function deleteElement(e) {
     if (e.target.className == 'delete') {
-      let deletedElement = e.target.parentElement;
-      let deletedElementIndex = deletedElement.getAttribute('data-index');
-      console.log(deletedElementIndex);
-      console.log(movieDB.movies[deletedElementIndex]);
-        if (movieDB.deleted.indexOf(movieDB.movies[deletedElementIndex])) {
-          movieDB.deleted.push(movieDB.movies[deletedElementIndex]);
+      let deleteElement = e.target.parentElement.getAttribute('data-fullname');
+      console.log(deleteElement);
+        if (movieDB.deleted.indexOf(deleteElement) == -1) { // ЕСЛИ ФИЛЬМ УЖЕ ДОБАВЛЕН В DELETED, ТО ИГНОРИМ ЕГО
+          movieDB.deleted.push(deleteElement);
         }
-      delete movieDB.movies[deletedElementIndex];
-      e.target.parentElement.remove();
+        if (movieDB.movies.indexOf(deleteElement) == -1) {
+          console.log('Ошибка: элемент в массиве фильмов не найден!');
+        } else {
+          movieDB.movies.splice(movieDB.movies.indexOf(deleteElement), 1)    // УДАЛЯЕМ ЭЛЕМЕНТ ИЗ ОСНОВНОГО МАССИВА
+        }
+      e.target.parentElement.remove();                                       // УДАНЯЕМ ЭЛЕМЕНТ СО СТРАНИЦЫ
     }
   }
 });
